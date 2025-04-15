@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat Crunch - Match 3 Games</title>
+    <link rel='icon' href='/src/icons/logo.png' type='image/x-icon'>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+
+        :root {
+            --primary: #fff100;
+            --secondary: #001f43;
+            --white: #ffffff;
+            --pixel-size: 4px;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--white);
+            color: var(--secondary);
+            overflow-x: hidden;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Pixel Art Styling */
+        .pixel-border {
+            position: relative;
+            border: var(--pixel-size) solid transparent;
+            background-clip: padding-box;
+        }
+
+        .pixel-border::after {
+            content: '';
+            position: absolute;
+            top: calc(var(--pixel-size) * -1);
+            left: calc(var(--pixel-size) * -1);
+            right: calc(var(--pixel-size) * -1);
+            bottom: calc(var(--pixel-size) * -1);
+            background: repeating-conic-gradient(var(--secondary) 0% 25%,
+                    var(--primary) 0% 50%,
+                    var(--secondary) 0% 75%,
+                    var(--primary) 0% 100%);
+            background-size: var(--pixel-size) var(--pixel-size);
+            background-position: 0 0;
+            z-index: -1;
+            animation: pixelBorderAnimation 10s linear infinite;
+        }
+
+        @keyframes pixelBorderAnimation {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 100% 100%;
+            }
+        }
+
+        /* Pixel Button */
+        .pixel-btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background-color: var(--primary);
+            color: var(--secondary);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s;
+            box-shadow:
+                inset calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0 0 rgba(0, 0, 0, 0.2),
+                inset var(--pixel-size) var(--pixel-size) 0 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .pixel-btn:hover {
+            transform: translateY(-4px);
+            box-shadow:
+                0 4px 8px rgba(0, 0, 0, 0.2),
+                inset calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0 0 rgba(0, 0, 0, 0.2),
+                inset var(--pixel-size) var(--pixel-size) 0 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .pixel-btn:active {
+            transform: translateY(0);
+            box-shadow:
+                inset var(--pixel-size) var(--pixel-size) 0 0 rgba(0, 0, 0, 0.2),
+                inset calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-weight: 300;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            font-size: 4.5rem;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        h2 {
+            font-size: 3.5rem;
+            margin-bottom: 30px;
+            position: relative;
+            display: inline-block;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            width: 60%;
+            height: var(--pixel-size);
+            background-color: var(--primary);
+            bottom: -10px;
+            left: 20%;
+        }
+
+        h3 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.5rem;
+            line-height: 1.5;
+            font-weight: 300;
+            margin-bottom: 1.5em;
+            max-width: 800px;
+        }
+
+        /* Containers */
+        .container {
+            width: 90%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        section {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        /* Header & Navigation */
+        header {
+            background-color: var(--secondary);
+            color: var(--white);
+            padding: 20px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 0 var(--primary);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 50px;
+            margin-right: 15px;
+            image-rendering: pixelated;
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        nav ul li a {
+            color: var(--white);
+            font-size: 1.1rem;
+            font-weight: bold;
+            position: relative;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 8px 0;
+        }
+
+        nav ul li a::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: var(--pixel-size);
+            background-color: var(--primary);
+            bottom: 0;
+            left: 0;
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease;
+        }
+
+        nav ul li a:hover {
+            color: var(--primary);
+        }
+
+        nav ul li a:hover::before {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+
+
+        /* Footer */
+        footer {
+            background-color: var(--white);
+            padding: 80px 0 40px;
+            color: var(--secondary);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .footer-logo img {
+            height: 40px;
+            margin-right: 10px;
+            image-rendering: pixelated;
+        }
+
+        .footer-logo-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        .footer-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .footer-info p {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            max-width: 400px;
+        }
+
+        .footer-links {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .footer-links h3 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--secondary);
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links ul li a {
+            color: var(--secondary);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .footer-links ul li a:hover {
+            color: var(--primary);
+            padding-left: 5px;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--secondary);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+
+        .social-icon:hover {
+            background-color: var(--primary);
+            color: var(--secondary);
+            transform: translateY(-5px);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: var(--pixel-size) solid var(--secondary);
+        }
+
+        .footer-bottom p {
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .footer-bottom-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-bottom-links a {
+            color: var(--secondary);
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .footer-bottom-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Responsive Design */
+        @media screen and (max-width: 992px) {
+            h1 {
+                font-size: 3.5rem;
+            }
+
+            h2 {
+                font-size: 2.8rem;
+            }
+
+            h3 {
+                font-size: 2rem;
+            }
+
+            .hero-content,
+            .gameplay-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .hero-text,
+            .gameplay-text {
+                padding-right: 0;
+                margin-bottom: 50px;
+            }
+
+            .gameplay-feature {
+                justify-content: center;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .download-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .download-button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            h1 {
+                font-size: 3rem;
+            }
+
+            h2 {
+                font-size: 2.5rem;
+            }
+
+            nav ul {
+                display: none;
+                position: absolute;
+                top: 90px;
+                left: 0;
+                width: 100%;
+                background-color: var(--secondary);
+                flex-direction: column;
+                align-items: center;
+                padding: 20px 0;
+                box-shadow: 0 var(--pixel-size) 0 var(--primary);
+            }
+
+            nav ul.active {
+                display: flex;
+            }
+
+            nav ul li {
+                margin: 10px 0;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .features-grid,
+            .reviews-grid,
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .game-stats {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .footer-content {
+                flex-direction: column;
+            }
+        }
+
+        @media screen and (max-width: 576px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            h2 {
+                font-size: 2rem;
+            }
+
+            .container {
+                width: 95%;
+            }
+
+            .pixel-badge {
+                position: relative;
+                top: 0;
+                right: 0;
+                display: inline-block;
+                margin-top: 20px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .pixel-btn {
+                width: 100%;
+            }
+        }
+
+        /* Glowing & Magical Effects */
+        .magical-text {
+            position: relative;
+            display: inline-block;
+            color: var(--primary);
+            text-shadow: 2px 2px 0 var(--secondary);
+        }
+
+
+
+        .pixel-glow {
+            position: relative;
+        }
+
+        .pixel-glow::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: repeating-linear-gradient(45deg,
+                    var(--primary),
+                    var(--primary) 10px,
+                    transparent 10px,
+                    transparent 20px);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .pixel-glow:hover::before {
+            opacity: 0.5;
+            animation: borderPulse 2s linear infinite;
+        }
+
+        @keyframes borderPulse {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 40px 40px;
+            }
+        }
+
+
+
+        :root {
+            --primary: #fff100;
+            --secondary: #001f43;
+            --white: #ffffff;
+            --pixel-size: 4px;
+        }
+
+        .privacy-policy {
+            font-family: 'Courier New', monospace;
+            max-width: 1200px;
+            margin: 120px auto 80px;
+            padding: 0 20px;
+            color: var(--secondary);
+            position: relative;
+        }
+
+        .privacy-policy::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(0deg, transparent 24px, var(--primary) 25px, transparent 26px) 0 0/50px 50px,
+                linear-gradient(90deg, transparent 24px, var(--primary) 25px, transparent 26px) 0 0/50px 50px;
+            opacity: 0.05;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .privacy-header {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        .privacy-title {
+            font-size: 3.5rem;
+            font-weight: 300;
+            text-transform: uppercase;
+            color: var(--secondary);
+            position: relative;
+            display: inline-block;
+            margin-bottom: 30px;
+            letter-spacing: -1px;
+            line-height: 1.2;
+        }
+
+        .privacy-title::after {
+            content: '';
+            position: absolute;
+            width: 60%;
+            height: var(--pixel-size);
+            background-color: var(--primary);
+            bottom: -10px;
+            left: 20%;
+        }
+
+        .privacy-subtitle {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            color: var(--secondary);
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+
+        .privacy-section {
+            margin-bottom: 50px;
+            padding: 30px;
+            background-color: var(--white);
+            border: var(--pixel-size) solid var(--secondary);
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .privacy-section:hover {
+            transform: translateY(-5px);
+            box-shadow:
+                var(--pixel-size) var(--pixel-size) 0 var(--secondary),
+                calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 2) 0 var(--primary);
+        }
+
+        .privacy-section::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            background-color: var(--primary);
+            top: 0;
+            left: 0;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 20px;
+            color: var(--secondary);
+            text-transform: uppercase;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: var(--pixel-size);
+            background-color: var(--primary);
+            bottom: -8px;
+            left: 0;
+            transform: scaleX(0.6);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .privacy-section:hover .section-title::after {
+            transform: scaleX(1);
+        }
+
+        .privacy-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--secondary);
+        }
+
+        .privacy-content p {
+            margin-bottom: 20px;
+        }
+
+        .privacy-content a {
+            color: var(--secondary);
+            font-weight: 600;
+            text-decoration: none;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .privacy-content a::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: var(--pixel-size);
+            background-color: var(--primary);
+            bottom: -4px;
+            left: 0;
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease;
+        }
+
+        .privacy-content a:hover {
+            color: var(--secondary);
+        }
+
+        .privacy-content a:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .privacy-content ul {
+            margin: 20px 0;
+            padding-left: 20px;
+        }
+
+        .privacy-content li {
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .privacy-content li::before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        @media screen and (max-width: 768px) {
+            .privacy-title {
+                font-size: 2.5rem;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .privacy-content {
+                font-size: 1rem;
+            }
+        }
+
+        @media screen and (max-width: 576px) {
+            .privacy-title {
+                font-size: 2rem;
+            }
+
+            .privacy-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-container">
+            <a href="/" class="logo">
+                <img src="/src/icons/logo.png" alt="Cat Crunch Logo">
+                <span class="logo-text">Cat Crunch</span>
+            </a>
+            <button class="mobile-menu-btn">☰</button>
+            <nav>
+                <ul id="nav-menu">
+                    <li><a href="/">Features</a></li>
+                    <li><a href="/">Gameplay</a></li>
+                    <li><a href="/">Gallery</a></li>
+                    <li><a href="/">Trailer</a></li>
+                    <li><a href="/">Reviews</a></li>
+                    <li><a href="/" class="pixel-glow">Download</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="privacy-policy">
+        <div class="privacy-header">
+            <h1 class="privacy-title">Privacy Policy</h1>
+            <p class="privacy-subtitle">At Cat Crunch - Match 3 Games, we value your privacy. This document outlines how we collect and use information when you visit our website or use our game.</p>
+        </div>
+
+        <div class="privacy-section">
+            <h2 class="section-title">Introduction</h2>
+            <div class="privacy-content">
+                <p>At Cat Crunch - Match 3 Games, accessible from https://cat-crunch-play.com/, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that are collected and recorded by Cat Crunch - Match 3 Games and how we use it.</p>
+                <p>If you have additional questions or require more information about our Privacy Policy, do not hesitate to contact us.</p>
+            </div>
+        </div>
+
+        <div class="privacy-section">
+            <h2 class="section-title">Log Files</h2>
+            <div class="privacy-content">
+                <p>Cat Crunch - Match 3 Games follows a standard procedure of using log files. These files log visitors when they visit websites. All hosting companies do this and are a part of hosting services' analytics. The information collected by log files includes internet protocol (IP) addresses, browser type, Internet Service Provider (ISP), date and time stamp, referring/exit pages, and possibly the number of clicks. These are not linked to any personally identifiable information. The purpose of the information is to analyze trends, administer the site, track users' movement on the website, and gather demographic information. Our Privacy Policy was created with the help of the Privacy Policy Generator.</p>
+            </div>
+        </div>
+
+        <div class="privacy-section">
+            <h2 class="section-title">Cookies and Web Beacons</h2>
+            <div class="privacy-content">
+                <p>Like any other website, Cat Crunch - Match 3 Games uses "cookies." These cookies are used to store information, including visitors' preferences and the pages on the website that the visitor accessed or visited. The information is used to optimize users' experience by customizing our web page content based on visitors' browser type and/or other information.</p>
+                <p>For more general information on cookies, please read the "Cookies" article from the Privacy Policy Generator.</p>
+            </div>
+        </div>
+        <div class="privacy-section">
+            <h2 class="section-title">Google DoubleClick DART Cookie</h2>
+            <div class="privacy-content">
+                <p>Google is one of the third-party vendors on our site. It also uses cookies, known as DART cookies, to serve ads to our site visitors based upon their visit to www.website.com and other sites on the internet. However, visitors may choose to decline the use of DART cookies by visiting the Google ad and content network Privacy Policy at the following URL – <a href="https://policies.google.com/technologies/ads" target="_blank">https://policies.google.com/technologies/ads</a>.</p>
+            </div>
+        </div>
+
+        <div class="privacy-section">
+            <h2 class="section-title">Our Advertising Partners</h2>
+            <div class="privacy-content">
+                <p>Some advertisers on our site may use cookies and web beacons. Our advertising partners are listed below. Each of our advertising partners has its own Privacy Policy for their policies on user data. For easier access, we hyperlinked to their Privacy Policies below.</p>
+                <ul>
+                    <li>Google<br>
+                        <a href="https://policies.google.com/technologies/ads" target="_blank">https://policies.google.com/technologies/ads</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="privacy-section">
+            <h2 class="section-title">Privacy Policies</h2>
+            <div class="privacy-content">
+                <p>You may consult this list to find the Privacy Policy for each of the advertising partners of Cat Crunch - Match 3 Games.</p>
+                <p>Third-party ad servers or ad networks use technologies like cookies, JavaScript, or Web Beacons that are used in their respective advertisements and links that appear on Cat Crunch - Match 3 Games, which are sent directly to users' browsers. They automatically receive your IP address when this occurs. These technologies are used to measure the effectiveness of their advertising campaigns and/or to personalize the advertising content that you see on websites that you visit.</p>
+                <p>Note that Cat Crunch - Match 3 Games has no access to or control over these cookies that are used by third-party advertisers.</p>
+            </div>
+        </div>
+
+        <div class="privacy-section">
+            <h2 class="section-title">Third-Party Privacy Policies</h2>
+            <div class="privacy-content">
+                <p>Cat Crunch - Match 3 Games's Privacy Policy does not apply to other advertisers or websites. Thus, we advise you to consult the respective Privacy Policies of these third-party ad servers for more detailed information. It may include their practices and instructions about how to opt out of certain options.</p>
+                <p>You can choose to disable cookies through your browser options. More detailed information about cookie management with specific web browsers can be found at the browsers' respective websites.</p>
+            </div>
+        </div>
+        <div class="privacy-section">
+            <h2 class="section-title">Children's Information</h2>
+            <div class="privacy-content">
+                <p>Another part of our priority is adding protection for children while using the internet. We encourage parents and guardians to observe, participate in, and/or monitor and guide their online activity.</p>
+                <p>Cat Crunch - Match 3 Games does not knowingly collect any personally identifiable information from children under the age of 13. Suppose you think that your child provided this kind of information on our website. In that case, we strongly encourage you to contact us immediately, and we will do our best efforts to promptly remove such information from our records.</p>
+            </div>
+        </div>
+
+        <div class="privacy-section">
+            <h2 class="section-title">Online Privacy Policy Only</h2>
+            <div class="privacy-content">
+                <p>This Privacy Policy applies only to our online activities and is valid for visitors to our website with regards to the information that they share and/or collect in Cat Crunch - Match 3 Games. This policy does not apply to any information collected offline or via channels other than this website.</p>
+            </div>
+        </div>
+
+        <div class="privacy-section pixel-border">
+            <h2 class="section-title">Contact Us</h2>
+            <div class="privacy-content">
+                <p>If you have any questions about this Privacy Policy, please don't hesitate to contact us at contact@cat-crunch-play.com.</p>
+                <p>Our team is committed to addressing any concerns you may have regarding your privacy while using our website and games.</p>
+            </div>
+        </div>
+
+        <!-- Back to game button -->
+        <div style="text-align: center; margin: 60px 0 40px;">
+            <a href="/" style="
+            display: inline-block;
+            padding: 15px 40px;
+            background-color: var(--primary);
+            color: var(--secondary);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 1.2rem;
+            box-shadow: var(--pixel-size) var(--pixel-size) 0 var(--secondary);
+            transition: all 0.3s;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        ">
+                Back to Game
+            </a>
+        </div>
+    </div>
+
+    <!-- Pixel-style animated footer divider -->
+    <div style="
+    height: 8px;
+    background: repeating-linear-gradient(
+        to right,
+        var(--primary),
+        var(--primary) 20px,
+        var(--secondary) 20px,
+        var(--secondary) 40px
+    );
+    margin-bottom: 40px;
+    animation: pixelMove 20s linear infinite;
+">
+    </div>
+    <style>
+        @keyframes pixelMove {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        /* Pixel border animation for the last section */
+        .pixel-border {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pixel-border::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(90deg, var(--primary) 50%, transparent 50%) 0 0/10px 10px,
+                linear-gradient(0deg, var(--primary) 50%, transparent 50%) 0 0/10px 10px;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .pixel-border:hover::after {
+            opacity: 0.1;
+            animation: borderAnimation 3s linear infinite;
+        }
+
+        @keyframes borderAnimation {
+            0% {
+                background-position: 0 0, 0 0;
+            }
+
+            100% {
+                background-position: 20px 0, 0 20px;
+            }
+        }
+    </style>
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <a href="/" class="footer-logo">
+                        <img src="/src/icons/logo.png" alt="Cat Crunch Logo">
+                        <span class="footer-logo-text">Cat Crunch</span>
+                    </a>
+                    <p>Cat Crunch is an exciting match-3 puzzle adventure game where you can join Liv and Clara to restore their home and city through colorful puzzles and challenges.</p>
+
+                </div>
+                <div class="footer-links">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="/">Features</a></li>
+                        <li><a href="/">Gameplay</a></li>
+                        <li><a href="/">Gallery</a></li>
+                        <li><a href="/">Trailer</a></li>
+                        <li><a href="/">Reviews</a></li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="footer-bottom">
+                <p style="margin-left: 20%;">© 2025 Cat Crunch - Match 3 Games. All Rights Reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="/Policy356/">Privacy Policy</a>
+                    <a href="/Service347/">Terms of Service</a>
+                    <a href="/Cookie992/">Cookie Policy</a>
+
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Simple JavaScript for Menu Toggle & Animation -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile Menu Toggle
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const navMenu = document.getElementById('nav-menu');
+
+            mobileMenuBtn.addEventListener('click', function() {
+                navMenu.classList.toggle('active');
+            });
+
+            // Smooth Scrolling for Anchor Links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    if (this.getAttribute('href') === '#') return;
+
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        window.scrollTo({
+                            top: target.offsetTop - 90,
+                            behavior: 'smooth'
+                        });
+                    }
+
+                    // Close mobile menu when a link is clicked
+                    navMenu.classList.remove('active');
+                });
+            });
+
+
+
+            // Add animation classes on scroll
+            function animateOnScroll() {
+                const elements = document.querySelectorAll('.feature-card, .gallery-item, .review-card');
+                const windowHeight = window.innerHeight;
+
+                elements.forEach(element => {
+                    const elementTop = element.getBoundingClientRect().top;
+                    if (elementTop < windowHeight - 100) {
+                        element.classList.add('pixel-glow');
+                    }
+                });
+            }
+
+            // Run on scroll and on page load
+            window.addEventListener('scroll', animateOnScroll);
+            animateOnScroll();
+        });
+    </script>
+    <?php include '../cookie-consent.php'; ?>
+</body>
+
+</html>

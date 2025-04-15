@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat Crunch - Match 3 Games</title>
+    <link rel='icon' href='/src/icons/logo.png' type='image/x-icon'>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+
+        :root {
+            --primary: #fff100;
+            --secondary: #001f43;
+            --white: #ffffff;
+            --pixel-size: 4px;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--white);
+            color: var(--secondary);
+            overflow-x: hidden;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Pixel Art Styling */
+        .pixel-border {
+            position: relative;
+            border: var(--pixel-size) solid transparent;
+            background-clip: padding-box;
+        }
+
+        .pixel-border::after {
+            content: '';
+            position: absolute;
+            top: calc(var(--pixel-size) * -1);
+            left: calc(var(--pixel-size) * -1);
+            right: calc(var(--pixel-size) * -1);
+            bottom: calc(var(--pixel-size) * -1);
+            background: repeating-conic-gradient(var(--secondary) 0% 25%,
+                    var(--primary) 0% 50%,
+                    var(--secondary) 0% 75%,
+                    var(--primary) 0% 100%);
+            background-size: var(--pixel-size) var(--pixel-size);
+            background-position: 0 0;
+            z-index: -1;
+            animation: pixelBorderAnimation 10s linear infinite;
+        }
+
+        @keyframes pixelBorderAnimation {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 100% 100%;
+            }
+        }
+
+        /* Pixel Button */
+        .pixel-btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background-color: var(--primary);
+            color: var(--secondary);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s;
+            box-shadow:
+                inset calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0 0 rgba(0, 0, 0, 0.2),
+                inset var(--pixel-size) var(--pixel-size) 0 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .pixel-btn:hover {
+            transform: translateY(-4px);
+            box-shadow:
+                0 4px 8px rgba(0, 0, 0, 0.2),
+                inset calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0 0 rgba(0, 0, 0, 0.2),
+                inset var(--pixel-size) var(--pixel-size) 0 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .pixel-btn:active {
+            transform: translateY(0);
+            box-shadow:
+                inset var(--pixel-size) var(--pixel-size) 0 0 rgba(0, 0, 0, 0.2),
+                inset calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-weight: 300;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            font-size: 4.5rem;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        h2 {
+            font-size: 3.5rem;
+            margin-bottom: 30px;
+            position: relative;
+            display: inline-block;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            width: 60%;
+            height: var(--pixel-size);
+            background-color: var(--primary);
+            bottom: -10px;
+            left: 20%;
+        }
+
+        h3 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.5rem;
+            line-height: 1.5;
+            font-weight: 300;
+            margin-bottom: 1.5em;
+            max-width: 800px;
+        }
+
+        /* Containers */
+        .container {
+            width: 90%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        section {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        /* Header & Navigation */
+        header {
+            background-color: var(--secondary);
+            color: var(--white);
+            padding: 20px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 0 var(--primary);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 50px;
+            margin-right: 15px;
+            image-rendering: pixelated;
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        nav ul li a {
+            color: var(--white);
+            font-size: 1.1rem;
+            font-weight: bold;
+            position: relative;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 8px 0;
+        }
+
+        nav ul li a::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: var(--pixel-size);
+            background-color: var(--primary);
+            bottom: 0;
+            left: 0;
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease;
+        }
+
+        nav ul li a:hover {
+            color: var(--primary);
+        }
+
+        nav ul li a:hover::before {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 180px 0 100px;
+            background-color: var(--white);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(0deg, transparent 24px, var(--primary) 25px, transparent 26px) 0 0/50px 50px,
+                linear-gradient(90deg, transparent 24px, var(--primary) 25px, transparent 26px) 0 0/50px 50px;
+            opacity: 0.1;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .hero-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-text {
+            flex: 1;
+            padding-right: 50px;
+        }
+
+        .hero-image {
+            flex: 1;
+            position: relative;
+        }
+
+        .hero-image img {
+            width: 60%;
+            border-radius: 8px;
+            box-shadow:
+                var(--pixel-size) var(--pixel-size) 0 var(--secondary),
+                calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 2) 0 var(--primary);
+            image-rendering: pixelated;
+        }
+
+        .pixel-badge {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            background-color: var(--primary);
+            color: var(--secondary);
+            padding: 10px 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: var(--pixel-size) var(--pixel-size) 0 var(--secondary);
+            z-index: 2;
+        }
+
+        .hero-buttons {
+            margin-top: 40px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .glow-button {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glow-button::after {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .glow-button:hover::after {
+            opacity: 0.5;
+            animation: glowEffect 1s ease-out;
+        }
+
+        @keyframes glowEffect {
+            0% {
+                transform: scale(0);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* Features Section */
+        .features {
+            background-color: var(--white);
+            position: relative;
+        }
+
+        .features::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 300px;
+            background:
+                radial-gradient(circle at center, var(--primary) 0%, transparent 70%);
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background-color: var(--white);
+            padding: 30px;
+            border: var(--pixel-size) solid var(--secondary);
+            position: relative;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            background-color: var(--primary);
+            top: 0;
+            left: 0;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow:
+                var(--pixel-size) var(--pixel-size) 0 var(--secondary),
+                calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 2) 0 var(--primary);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: inline-block;
+            padding: 15px;
+            background-color: rgba(0, 31, 67, 0.1);
+        }
+
+        .feature-card h3 {
+            color: var(--secondary);
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: var(--secondary);
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+
+        /* Gameplay Section */
+        .gameplay {
+            background-color: var(--secondary);
+            color: var(--white);
+            position: relative;
+        }
+
+        .gameplay::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(90deg, transparent 49px, var(--primary) 50px, var(--primary) 51px, transparent 51px) 0 0/100px 100%,
+                linear-gradient(0deg, transparent 49px, var(--primary) 50px, var(--primary) 51px, transparent 51px) 0 0/100% 100px;
+            opacity: 0.05;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .gameplay-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .gameplay-text {
+            flex: 1;
+        }
+
+        .gameplay-image {
+            flex: 1;
+        }
+
+        .gameplay-image img {
+            width: 60%;
+            border: var(--pixel-size) solid var(--white);
+            box-shadow:
+                var(--pixel-size) var(--pixel-size) 0 var(--primary),
+                calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 2) 0 rgba(255, 241, 0, 0.5);
+            image-rendering: pixelated;
+        }
+
+        .gameplay h2 {
+            color: var(--primary);
+        }
+
+        .gameplay h2::after {
+            background-color: var(--white);
+        }
+
+        .gameplay-features {
+            margin-top: 30px;
+        }
+
+        .gameplay-feature {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .gameplay-feature-icon {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .gameplay-feature-text {
+            font-size: 1.2rem;
+        }
+
+        /* Gallery Section */
+        .gallery {
+            background-color: var(--white);
+            text-align: center;
+            position: relative;
+        }
+
+        .gallery::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 300px;
+            height: 300px;
+            background:
+                radial-gradient(circle at center, var(--primary) 0%, transparent 70%);
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            border: var(--pixel-size) solid var(--secondary);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            display: block;
+            transition: all 0.5s;
+            image-rendering: pixelated;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-10px);
+            box-shadow:
+                var(--pixel-size) var(--pixel-size) 0 var(--secondary),
+                calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 2) 0 var(--primary);
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .gallery-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0, 31, 67, 0.9), transparent);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .gallery-item:hover .gallery-overlay {
+            opacity: 1;
+        }
+
+        .gallery-title {
+            color: var(--white);
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .gallery-desc {
+            color: var(--white);
+            font-size: 1rem;
+        }
+
+        /* Trailer Section */
+        .trailer {
+            background-color: var(--secondary);
+            color: var(--white);
+            text-align: center;
+            position: relative;
+        }
+
+        .trailer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                repeating-linear-gradient(45deg, rgba(255, 241, 0, 0.1) 0, rgba(255, 241, 0, 0.1) 10px, transparent 10px, transparent 20px);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .trailer-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .trailer h2 {
+            color: var(--primary);
+        }
+
+        .trailer h2::after {
+            background-color: var(--white);
+        }
+
+        .trailer-video {
+            margin-top: 50px;
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            border: var(--pixel-size) solid var(--white);
+            box-shadow:
+                var(--pixel-size) var(--pixel-size) 0 var(--primary),
+                calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 2) 0 rgba(255, 241, 0, 0.5);
+        }
+
+        .trailer-video img {
+            width: 100%;
+            display: block;
+        }
+
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 0 var(--pixel-size) var(--secondary);
+        }
+
+        .play-button:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 0 0 var(--pixel-size) var(--secondary), 0 0 20px rgba(255, 241, 0, 0.8);
+        }
+
+        /* Reviews Section */
+        .reviews {
+            background-color: var(--white);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reviews::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(45deg, transparent 49px, var(--primary) 50px, var(--primary) 51px, transparent 51px) 0 0/100px 100px;
+            opacity: 0.05;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .reviews-container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .reviews-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .review-card {
+            background-color: var(--white);
+            padding: 30px;
+            border: var(--pixel-size) solid var(--secondary);
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .review-card::before {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary);
+            top: -20px;
+            left: 20px;
+            transform: rotate(45deg);
+            z-index: -1;
+        }
+
+        .review-card:hover {
+            transform: translateY(-10px);
+            box-shadow:
+                var(--pixel-size) var(--pixel-size) 0 var(--secondary),
+                calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 2) 0 var(--primary);
+        }
+
+        .review-rating {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .review-text {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: var(--secondary);
+        }
+
+        .review-author {
+            display: flex;
+            align-items: center;
+        }
+
+
+        .section-text p {
+            text-align: center;
+
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border: var(--pixel-size) solid var(--secondary);
+            margin-right: 15px;
+            image-rendering: pixelated;
+        }
+
+        .author-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--secondary);
+        }
+
+        .author-info {
+            font-size: 0.9rem;
+            color: var(--secondary);
+            opacity: 0.7;
+        }
+
+        /* Download Section */
+        .download {
+            background-color: var(--secondary);
+            color: var(--white);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .download::before,
+        .download::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle at center, var(--primary) 0%, transparent 70%);
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        .download::before {
+            top: -150px;
+            left: -150px;
+        }
+
+        .download::after {
+            bottom: -150px;
+            right: -150px;
+        }
+
+        .download-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .download h2 {
+            color: var(--primary);
+        }
+
+        .download h2::after {
+            background-color: var(--white);
+        }
+
+        .download-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 50px;
+            flex-wrap: wrap;
+        }
+
+        .download-button {
+            display: flex;
+            align-items: center;
+            background-color: var(--white);
+            padding: 15px 30px;
+            border: var(--pixel-size) solid var(--secondary);
+            transition: all 0.3s;
+        }
+
+        .download-button:hover {
+            transform: translateY(-10px);
+            box-shadow:
+                var(--pixel-size) var(--pixel-size) 0 var(--secondary),
+                calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 2) 0 var(--primary);
+        }
+
+        .download-button img {
+            width: 40px;
+            height: 40px;
+            margin-right: 15px;
+            image-rendering: pixelated;
+        }
+
+        .download-text {
+            text-align: left;
+        }
+
+        .download-text-small {
+            font-size: 0.8rem;
+            color: var(--secondary);
+            opacity: 0.7;
+        }
+
+        .download-text-large {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-top: 50px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .stat-text {
+            font-size: 1.1rem;
+            color: var(--white);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--white);
+            padding: 80px 0 40px;
+            color: var(--secondary);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .footer-logo img {
+            height: 40px;
+            margin-right: 10px;
+            image-rendering: pixelated;
+        }
+
+        .footer-logo-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        .footer-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .footer-info p {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            max-width: 400px;
+        }
+
+        .footer-links {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .footer-links h3 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--secondary);
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links ul li a {
+            color: var(--secondary);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .footer-links ul li a:hover {
+            color: var(--primary);
+            padding-left: 5px;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--secondary);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+
+        .social-icon:hover {
+            background-color: var(--primary);
+            color: var(--secondary);
+            transform: translateY(-5px);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: var(--pixel-size) solid var(--secondary);
+        }
+
+        .footer-bottom p {
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .footer-bottom-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-bottom-links a {
+            color: var(--secondary);
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .footer-bottom-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Responsive Design */
+        @media screen and (max-width: 992px) {
+            h1 {
+                font-size: 3.5rem;
+            }
+
+            h2 {
+                font-size: 2.8rem;
+            }
+
+            h3 {
+                font-size: 2rem;
+            }
+
+            .hero-content,
+            .gameplay-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .hero-text,
+            .gameplay-text {
+                padding-right: 0;
+                margin-bottom: 50px;
+            }
+
+            .gameplay-feature {
+                justify-content: center;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .download-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .download-button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            h1 {
+                font-size: 3rem;
+            }
+
+            h2 {
+                font-size: 2.5rem;
+            }
+
+            nav ul {
+                display: none;
+                position: absolute;
+                top: 90px;
+                left: 0;
+                width: 100%;
+                background-color: var(--secondary);
+                flex-direction: column;
+                align-items: center;
+                padding: 20px 0;
+                box-shadow: 0 var(--pixel-size) 0 var(--primary);
+            }
+
+            nav ul.active {
+                display: flex;
+            }
+
+            nav ul li {
+                margin: 10px 0;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .features-grid,
+            .reviews-grid,
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .game-stats {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .footer-content {
+                flex-direction: column;
+            }
+        }
+
+        @media screen and (max-width: 576px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            h2 {
+                font-size: 2rem;
+            }
+
+            .container {
+                width: 95%;
+            }
+
+            .pixel-badge {
+                position: relative;
+                top: 0;
+                right: 0;
+                display: inline-block;
+                margin-top: 20px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .pixel-btn {
+                width: 100%;
+            }
+        }
+
+        /* Glowing & Magical Effects */
+        .magical-text {
+            position: relative;
+            display: inline-block;
+            color: var(--primary);
+            text-shadow: 2px 2px 0 var(--secondary);
+        }
+
+
+
+        .pixel-glow {
+            position: relative;
+        }
+
+        .pixel-glow::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            background: repeating-linear-gradient(45deg,
+                    var(--primary),
+                    var(--primary) 10px,
+                    transparent 10px,
+                    transparent 20px);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .pixel-glow:hover::before {
+            opacity: 0.5;
+            animation: borderPulse 2s linear infinite;
+        }
+
+        @keyframes borderPulse {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 40px 40px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-container">
+            <a href="/" class="logo">
+                <img src="/src/icons/logo.png" alt="Cat Crunch Logo">
+                <span class="logo-text">Cat Crunch</span>
+            </a>
+            <button class="mobile-menu-btn">☰</button>
+            <nav>
+                <ul id="nav-menu">
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#gameplay">Gameplay</a></li>
+                    <li><a href="#gallery">Gallery</a></li>
+                    <li><a href="#trailer">Trailer</a></li>
+                    <li><a href="#reviews">Reviews</a></li>
+                    <li><a href="#download" class="pixel-glow">Download</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container hero-content">
+            <div class="hero-text">
+                <h1>Cat Crunch <span class="magical-text" data-text="Match 3 Games">Match 3 Games</span></h1>
+                <p>Join Liv and Clara on their puzzle adventure to restore their home and city! Solve colorful match-3 levels, compete in exciting challenges, and enjoy endless fun - without internet!</p>
+                <div class="hero-buttons">
+                    <a href="#download" class="pixel-btn glow-button">Download Now</a>
+                    <a href="#features" class="pixel-btn" style="background-color: var(--secondary); color: var(--white);">Learn More</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="/src/img/hero.png" alt="Cat Crunch Game Screenshot">
+                <div class="pixel-badge">★ 4.8 (12.7K)</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header" style="justify-content: center;">
+                <h2>Awesome Features</h2>
+
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🧩</div>
+                    <h3>5000+ Levels</h3>
+                    <p>Dive into a world with over 5000 unique match-3 levels in a vibrant city. Discover new territories and enjoy endless puzzles with amazing rewards.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🏠</div>
+                    <h3>Decorate & Build</h3>
+                    <p>Explore and decorate exciting new areas in Liv and Clara's home and city, including parks, theaters, cafes, and more!</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🏆</div>
+                    <h3>Exciting Challenges</h3>
+                    <p>Compete in Cat Race, Road Race, Team Battle, and Rainbow Race challenges to claim fantastic prizes for your achievements.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Power Boosters</h3>
+                    <p>Unlock powerful boosters to help you conquer levels! Collect coins and special treasures on dynamic battle levels.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Gameplay Section -->
+    <section class="gameplay" id="gameplay">
+        <div class="container gameplay-content">
+            <div class="gameplay-text">
+                <h2>Addictive Gameplay</h2>
+                <p>Cat Crunch offers unique match-3 gameplay suitable for both beginners and puzzle masters! Challenge your mind with each puzzle and enhance your skills!</p>
+                <div class="gameplay-features">
+                    <div class="gameplay-feature">
+                        <div class="gameplay-feature-icon">✓</div>
+                        <div class="gameplay-feature-text">Easy to learn, quick to master gameplay that's hard to put down!</div>
+                    </div>
+                    <div class="gameplay-feature">
+                        <div class="gameplay-feature-icon">✓</div>
+                        <div class="gameplay-feature-text">Overcome quirky obstacles like rubber ducks, boxes, yarn, storage units, vacuum cleaners, and mailboxes!</div>
+                    </div>
+                    <div class="gameplay-feature">
+                        <div class="gameplay-feature-icon">✓</div>
+                        <div class="gameplay-feature-text">Discover amazing treasure chests with chances to win coins, boosters, unlimited lives, and more!</div>
+                    </div>
+                    <div class="gameplay-feature">
+                        <div class="gameplay-feature-icon">✓</div>
+                        <div class="gameplay-feature-text">Relax with light, fast-to-learn gameplay that's difficult to put down!</div>
+                    </div>
+                </div>
+            </div>
+            <div class="gameplay-image">
+                <img src="/src/img/gameplay.png" alt="Cat Crunch Gameplay Screenshot">
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section class="gallery" id="gallery">
+        <div class="container">
+            <div class="section-header">
+                <h2>Game Gallery</h2>
+                <p>Take a glimpse at the colorful world of Cat Crunch!</p>
+            </div>
+            <div class="gallery-grid">
+                <div class="gallery-item">
+                    <img src="/src/img/gallery1.png" alt="Match-3 Gameplay">
+                    <div class="gallery-overlay">
+                        <div class="gallery-title">Match-3 Action</div>
+                        <div class="gallery-desc">Create powerful combos and clear the board</div>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="/src/img/gallery2.png" alt="Home Decoration">
+                    <div class="gallery-overlay">
+                        <div class="gallery-title">Home Decoration</div>
+                        <div class="gallery-desc">Design and personalize your space</div>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="/src/img/gallery3.png" alt="City Building">
+                    <div class="gallery-overlay">
+                        <div class="gallery-title">City Building</div>
+                        <div class="gallery-desc">Restore and rebuild the town</div>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <img src="/src/img/gallery4.png" alt="Power-ups">
+                    <div class="gallery-overlay">
+                        <div class="gallery-title">Special Power-ups</div>
+                        <div class="gallery-desc">Use boosters to overcome obstacles</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Trailer Section -->
+    <section class="trailer" id="trailer">
+        <div class="container trailer-content">
+            <h2>Watch the Trailer</h2>
+            <p style="margin-left: 20%;">Get a taste of the colorful world, fun characters, and exciting puzzles that await you in Cat Crunch!</p>
+            <a href="https://youtu.be/Wq1NKdmQe3E" target="_blank">
+                <div class="trailer-video">
+                    <img src="/src/img/trailer.png" alt="Cat Crunch Game Trailer Thumbnail">
+                    <div class="play-button">▶</div>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <!-- Reviews Section -->
+    <section class="reviews" id="reviews">
+        <div class="container reviews-container">
+            <div class="section-header">
+                <h2>Player Reviews</h2>
+
+            </div>
+            <div class="reviews-grid">
+                <div class="review-card">
+                    <div class="review-rating">★★★★★</div>
+                    <div class="review-text">"This game is absolutely addictive! I've been playing for months and still haven't gotten bored. The puzzles are challenging but not frustrating, and I love decorating Liv and Clara's house!"</div>
+                    <div class="review-author">
+
+                        <div>
+                            <div class="author-name">Emily W.</div>
+                            <div class="author-info">Playing for 6 months</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="review-card">
+                    <div class="review-rating">★★★★★</div>
+                    <div class="review-text">"Perfect game for my daily commute! I love that I can play offline without using my data. The levels are fun and the power-ups keep things interesting. Highly recommend!"</div>
+                    <div class="review-author">
+
+                        <div>
+                            <div class="author-name">Michael T.</div>
+                            <div class="author-info">Playing for 1 year</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="review-card">
+                    <div class="review-rating">★★★★★</div>
+                    <div class="review-text">"I'm usually not into mobile games, but Cat Crunch has me hooked! The graphics are cute, the gameplay is smooth, and I love the competition features. Great way to relax!"</div>
+                    <div class="review-author">
+
+                        <div>
+                            <div class="author-name">Sarah K.</div>
+                            <div class="author-info">Playing for 3 months</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section class="download" id="download">
+        <div class="container download-content">
+            <h2>Download Now</h2>
+
+            <div class="download-buttons">
+                <a href="https://play.google.com/store/apps/details?id=com.yfactorysoft.CatCrunch&pcampaignid=web_share" target="_blank" class="download-button">
+                    <img src="/src/img/play.png" alt="Google Play">
+                    <div class="download-text">
+                        <div class="download-text-small">GET IT ON</div>
+                        <div class="download-text-large">Google Play</div>
+                    </div>
+                </a>
+                <a href="https://apps.apple.com/us/app/cat-crunch-match-3-games/id6471232053?" target="_blank" class="download-button">
+                    <img src="/src/img/store.png" alt="App Store">
+                    <div class="download-text">
+                        <div class="download-text-small">DOWNLOAD ON THE</div>
+                        <div class="download-text-large">App Store</div>
+                    </div>
+                </a>
+            </div>
+            <div class="game-stats">
+                <div class="stat">
+                    <div class="stat-number">100K+</div>
+                    <div class="stat-text">Downloads</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">4.8</div>
+                    <div class="stat-text">Star Rating</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">5000+</div>
+                    <div class="stat-text">Unique Levels</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">3+</div>
+                    <div class="stat-text">Age Rating</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <a href="/" class="footer-logo">
+                        <img src="/src/icons/logo.png" alt="Cat Crunch Logo">
+                        <span class="footer-logo-text">Cat Crunch</span>
+                    </a>
+                    <p>Cat Crunch is an exciting match-3 puzzle adventure game where you can join Liv and Clara to restore their home and city through colorful puzzles and challenges.</p>
+
+                </div>
+                <div class="footer-links">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#gameplay">Gameplay</a></li>
+                        <li><a href="#gallery">Gallery</a></li>
+                        <li><a href="#trailer">Trailer</a></li>
+                        <li><a href="#reviews">Reviews</a></li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="footer-bottom">
+                <p style="margin-left: 20%;">© 2025 Cat Crunch - Match 3 Games. All Rights Reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="/Policy356/">Privacy Policy</a>
+                    <a href="/Service347/">Terms of Service</a>
+                    <a href="/Cookie992/">Cookie Policy</a>
+
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Simple JavaScript for Menu Toggle & Animation -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile Menu Toggle
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const navMenu = document.getElementById('nav-menu');
+
+            mobileMenuBtn.addEventListener('click', function() {
+                navMenu.classList.toggle('active');
+            });
+
+            // Smooth Scrolling for Anchor Links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    if (this.getAttribute('href') === '#') return;
+
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        window.scrollTo({
+                            top: target.offsetTop - 90,
+                            behavior: 'smooth'
+                        });
+                    }
+
+                    // Close mobile menu when a link is clicked
+                    navMenu.classList.remove('active');
+                });
+            });
+
+
+
+            // Add animation classes on scroll
+            function animateOnScroll() {
+                const elements = document.querySelectorAll('.feature-card, .gallery-item, .review-card');
+                const windowHeight = window.innerHeight;
+
+                elements.forEach(element => {
+                    const elementTop = element.getBoundingClientRect().top;
+                    if (elementTop < windowHeight - 100) {
+                        element.classList.add('pixel-glow');
+                    }
+                });
+            }
+
+            // Run on scroll and on page load
+            window.addEventListener('scroll', animateOnScroll);
+            animateOnScroll();
+        });
+    </script>
+    <?php include 'cookie-consent.php'; ?>
+</body>
+
+</html>
